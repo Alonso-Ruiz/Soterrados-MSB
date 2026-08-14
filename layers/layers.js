@@ -36,15 +36,6 @@ var inventario = vectorLayer(json_Inventario2026_0, style_Inventario2026_0, 'Inv
 var jsonSource_Inventario2026_0 = inventario.source;
 var lyr_Inventario2026_0 = inventario.layer;
 
-// Recursos de leyenda incluidos en la actualización de datos.
-lyr_Inventario2026_0.set('legendImages', [
-    'styles/legend/Inventario2026_0_0.png',
-    'styles/legend/Inventario2026_0_1.png',
-    'styles/legend/Inventario2026_0_2.png'
-]);
-lyr_subsectores_1.set('legendImages', ['styles/legend/subsectores_1.png']);
-lyr_Sectores_2.set('legendImages', ['styles/legend/Sectores_2.png']);
-
 // Orden visual explícito: vías al fondo, divisiones territoriales encima
 // y contenedores siempre en primer plano.
 lyr_red_vial_0.setZIndex(10);
