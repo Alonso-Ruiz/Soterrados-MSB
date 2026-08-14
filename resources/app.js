@@ -142,8 +142,10 @@
             '<label class="lp-item"><input type="checkbox" data-cont="RECICLAJE" checked>' +
               '<img src="' + ICON_REC + '" alt=""><span>Reciclaje</span></label>' +
             '<div class="lp-title lp-sep">División territorial</div>' +
-            '<label class="lp-item"><input type="checkbox" data-layer="sectores" checked><span>Sectores</span></label>' +
-            '<label class="lp-item"><input type="checkbox" data-layer="subsectores" checked><span>Subsectores</span></label>' +
+            '<label class="lp-item"><input type="checkbox" data-layer="sectores" checked>' +
+              '<span>Sectores</span></label>' +
+            '<label class="lp-item"><input type="checkbox" data-layer="subsectores" checked>' +
+              '<span>Subsectores</span></label>' +
             '<div class="lp-title lp-sep">Red vial</div>' +
             '<label class="lp-item"><input type="checkbox" data-via="Vía Local Preferencial" checked>' +
               '<span class="lp-line" style="border-top:3.5px solid #413ccf"></span><span>Local Preferencial</span></label>' +
