@@ -46,6 +46,8 @@
     var ICON_SOT = svgUri(binSvg('#ffffff', '#ffffff', '#ffffff', '#ffffff', '#111111'));
     // VERDE INTENSO = RECICLAJE
     var ICON_REC = svgUri(binSvg('#339ffe', '#0088FF', '#4eacff', '#0088FF', '#001527'));
+    // VERDE = PROPUESTA DE RECICLAJE
+    var ICON_PRO = svgUri(binSvg('#2ecb70', '#178f49', '#52d98a', '#178f49', '#073d22'));
 
     /* ================= UTILIDADES ================= */
     function driveId(url) {
@@ -63,7 +65,12 @@
     }
 
     /* ================= ESTADO DE CATEGORÍAS ================= */
-    var contState = { 'SOTERRADOS': true, 'SUPERFICIAL': true, 'RECICLAJE': true };
+    var contState = {
+        'SOTERRADOS': true,
+        'SUPERFICIAL': true,
+        'RECICLAJE': true,
+        'PROPUESTA RECICLAJE': true
+    };
     var viaState  = { 'Vía Local Preferencial': true, 'Vía Local Secundaria': true, 'Metropolitana': true };
 
     /* ================= ESTILOS ================= */
@@ -77,12 +84,16 @@
         var styleRec = new ol.style.Style({
             image: new ol.style.Icon({ src: ICON_REC, anchor: [0.5, 0.95] })
         });
+        var stylePro = new ol.style.Style({
+            image: new ol.style.Icon({ src: ICON_PRO, anchor: [0.5, 0.95] })
+        });
 
         lyr_Inventario2026_0.setStyle(function (f, resolution) {
             var tipo = f.get('TIPO');
             if (!contState[tipo]) return null;
             var base = tipo === 'SOTERRADOS' ? styleSot :
-                       tipo === 'RECICLAJE' ? styleRec : styleSup;
+                       tipo === 'RECICLAJE' ? styleRec :
+                       tipo === 'PROPUESTA RECICLAJE' ? stylePro : styleSup;
             if (resolution < 1.2 && f.get('Name')) {
                 return [base, new ol.style.Style({
                     text: new ol.style.Text({
@@ -141,6 +152,8 @@
               '<img src="' + ICON_SUP + '" alt=""><span>Superficial</span></label>' +
             '<label class="lp-item"><input type="checkbox" data-cont="RECICLAJE" checked>' +
               '<img src="' + ICON_REC + '" alt=""><span>Reciclaje</span></label>' +
+            '<label class="lp-item"><input type="checkbox" data-cont="PROPUESTA RECICLAJE" checked>' +
+              '<img src="' + ICON_PRO + '" alt=""><span>Propuesta de reciclaje</span></label>' +
             '<div class="lp-title lp-sep">División territorial</div>' +
             '<label class="lp-item"><input type="checkbox" data-layer="sectores" checked>' +
               '<span>Sectores</span></label>' +
@@ -208,11 +221,13 @@
         var tipo  = f.get('TIPO') || '';
         var sot   = tipo === 'SOTERRADOS';
         var rec   = tipo === 'RECICLAJE';
-        var icon  = sot ? ICON_SOT : (rec ? ICON_REC : ICON_SUP);
-        var color = sot ? '#666' : (rec ? '#14834a' : '#1f9c87');
+        var pro   = tipo === 'PROPUESTA RECICLAJE';
+        var icon  = sot ? ICON_SOT : (rec ? ICON_REC : (pro ? ICON_PRO : ICON_SUP));
+        var color = sot ? '#666' : (rec ? '#14834a' : (pro ? '#178f49' : '#1f9c87'));
         var capacidad = f.get('CAPACIDAD');
         var link  = f.get('LINK');
         var id    = driveId(link);
+        var note  = link && !id ? String(link).replace(/\s+/g, ' ').trim() : '';
 
         var foto;
         if (id) {
@@ -234,6 +249,7 @@
             '<span class="mc-badge" style="color:' + color + '">' + esc(tipo) + '</span>' +
           '</div>' +
           (capacidad != null ? '<div class="mc-capacity">Capacidad: ' + esc(capacidad) + ' m³</div>' : '') +
+          (note ? '<div class="mc-capacity">Estado: ' + esc(note) + '</div>' : '') +
           foto +
         '</div>';
     }
