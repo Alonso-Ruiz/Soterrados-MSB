@@ -128,6 +128,12 @@
 
     /* ================= PANEL DE CAPAS (leyenda desglosada) ================= */
     function addLayerPanel() {
+        var contCounts = {};
+        jsonSource_Inventario2026_0.getFeatures().forEach(function (feature) {
+            var tipo = feature.get('TIPO');
+            contCounts[tipo] = (contCounts[tipo] || 0) + 1;
+        });
+
         var toggle = document.createElement('button');
         toggle.className = 'layer-toggle';
         toggle.type = 'button';
@@ -147,13 +153,13 @@
             '<div class="lp-header"><span>Capas y leyenda</span><button type="button" class="lp-close" aria-label="Cerrar capas">&times;</button></div>' +
             '<div class="lp-title">Contenedores</div>' +
             '<label class="lp-item"><input type="checkbox" data-cont="SOTERRADOS" checked>' +
-              '<img src="' + ICON_SOT + '" alt=""><span>Soterrados</span></label>' +
+              '<img src="' + ICON_SOT + '" alt=""><span>Soterrados (' + (contCounts.SOTERRADOS || 0) + ')</span></label>' +
             '<label class="lp-item"><input type="checkbox" data-cont="SUPERFICIAL" checked>' +
-              '<img src="' + ICON_SUP + '" alt=""><span>Superficial</span></label>' +
+              '<img src="' + ICON_SUP + '" alt=""><span>Superficial (' + (contCounts.SUPERFICIAL || 0) + ')</span></label>' +
             '<label class="lp-item"><input type="checkbox" data-cont="RECICLAJE" checked>' +
-              '<img src="' + ICON_REC + '" alt=""><span>Reciclaje</span></label>' +
+              '<img src="' + ICON_REC + '" alt=""><span>Reciclaje (' + (contCounts.RECICLAJE || 0) + ')</span></label>' +
             '<label class="lp-item"><input type="checkbox" data-cont="PROPUESTA RECICLAJE" checked>' +
-              '<img src="' + ICON_PRO + '" alt=""><span>Propuesta de reciclaje</span></label>' +
+              '<img src="' + ICON_PRO + '" alt=""><span>Propuesta (' + (contCounts['PROPUESTA RECICLAJE'] || 0) + ')</span></label>' +
             '<div class="lp-title lp-sep">División territorial</div>' +
             '<label class="lp-item"><input type="checkbox" data-layer="sectores" checked>' +
               '<span>Sectores</span></label>' +
