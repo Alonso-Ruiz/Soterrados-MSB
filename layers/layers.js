@@ -10,7 +10,11 @@ function vectorLayer(json, style, title, interactive) {
     var source = new ol.source.Vector({ attributions: ' ' });
     source.addFeatures(features);
     var layer = new ol.layer.Vector({
-        declutter: false,
+        declutter: title === 'Red vial',
+        renderOrder: null,
+        renderBuffer: 48,
+        updateWhileAnimating: false,
+        updateWhileInteracting: false,
         source: source,
         style: style,
         popuplayertitle: title,

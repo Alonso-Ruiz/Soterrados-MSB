@@ -37,10 +37,10 @@ var style_red_vial_0 = function(feature, resolution){
     
     var labelText = ""; 
     var value = feature.get("CLASIFIC");
-    var labelFont = "15.600000000000001px \'Arial\', sans-serif";
-    var labelFill = "#000000";
-    var bufferColor = "#fafafa";
-    var bufferWidth = 0.6000000000000001;
+    var labelFont = "bold 12px Arial, sans-serif";
+    var labelFill = "#ffffff";
+    var bufferColor = "#111111";
+    var bufferWidth = 3;
     var textAlign = "left";
     var offsetX = 0;
     var offsetY = 0;

@@ -75,17 +75,19 @@
 
     /* ================= ESTILOS ================= */
     function overrideStyles() {
+        var binLabelStyles = Object.create(null);
+        var roadStyles = new WeakMap();
         var styleSup = new ol.style.Style({
-            image: new ol.style.Icon({ src: ICON_SUP, anchor: [0.5, 0.95] })
+            image: new ol.style.Icon({ src: ICON_SUP, scale: 0.75, anchor: [0.5, 0.95] })
         });
         var styleSot = new ol.style.Style({
-            image: new ol.style.Icon({ src: ICON_SOT, anchor: [0.5, 0.95] })
+            image: new ol.style.Icon({ src: ICON_SOT, scale: 0.75, anchor: [0.5, 0.95] })
         });
         var styleRec = new ol.style.Style({
-            image: new ol.style.Icon({ src: ICON_REC, anchor: [0.5, 0.95] })
+            image: new ol.style.Icon({ src: ICON_REC, scale: 0.75, anchor: [0.5, 0.95] })
         });
         var stylePro = new ol.style.Style({
-            image: new ol.style.Icon({ src: ICON_PRO, anchor: [0.5, 0.95] })
+            image: new ol.style.Icon({ src: ICON_PRO, scale: 0.75, anchor: [0.5, 0.95] })
         });
 
         lyr_Inventario2026_0.setStyle(function (f, resolution) {
@@ -95,15 +97,19 @@
                        tipo === 'RECICLAJE' ? styleRec :
                        tipo === 'PROPUESTA RECICLAJE' ? stylePro : styleSup;
             if (resolution < 1.2 && f.get('Name')) {
-                return [base, new ol.style.Style({
-                    text: new ol.style.Text({
-                        text: String(f.get('Name')),
-                        font: '10px -apple-system, Arial, sans-serif',
-                        fill: new ol.style.Fill({ color: '#222' }),
-                        stroke: new ol.style.Stroke({ color: 'rgba(255,255,255,.9)', width: 3 }),
-                        offsetY: 11
-                    })
-                })];
+                var name = String(f.get('Name'));
+                if (!binLabelStyles[name]) {
+                    binLabelStyles[name] = new ol.style.Style({
+                        text: new ol.style.Text({
+                            text: name,
+                            font: '10px -apple-system, Arial, sans-serif',
+                            fill: new ol.style.Fill({ color: '#222' }),
+                            stroke: new ol.style.Stroke({ color: 'rgba(255,255,255,.9)', width: 3 }),
+                            offsetY: 11
+                        })
+                    });
+                }
+                return [base, binLabelStyles[name]];
             }
             return base;
         });
@@ -112,17 +118,24 @@
         var originalRoadStyle = style_red_vial_0;
         lyr_red_vial_0.setStyle(function (f, resolution) {
             if (!viaState[f.get('CLASIFIC')]) return null;
-            return originalRoadStyle(f, resolution);
+            var cached = roadStyles.get(f);
+            if (!cached) {
+                cached = originalRoadStyle(f, resolution);
+                roadStyles.set(f, cached);
+            }
+            return cached;
         });
     }
 
     /* ================= TÍTULO ================= */
     function addTitle() {
-        var bar = document.createElement('div');
+        var bar = document.createElement('header');
         bar.className = 'app-title';
         bar.innerHTML =
-            '<span class="title-full">Inventario de Contenedores de Basura e Islas de Reciclaje</span>' +
-            '<span class="title-short">Inventario de Contenedores de Basura e Islas de Reciclaje</span>';
+            '<div class="app-brand"><img src="assets/escudo-san-borja.png" alt="Escudo de San Borja">' +
+            '<strong>Municipalidad<br>de San Borja</strong></div>' +
+            '<div class="app-heading"><span>INVENTARIO 2026 · SAN BORJA</span>' +
+            '<strong>Inventario de Contenedores de Basura e Islas de Reciclaje</strong></div>';
         document.body.appendChild(bar);
     }
 
@@ -139,18 +152,15 @@
         toggle.type = 'button';
         toggle.setAttribute('aria-label', 'Abrir capas y leyenda');
         toggle.setAttribute('aria-expanded', 'false');
-        toggle.innerHTML =
-            '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-              '<path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z"></path>' +
-              '<path d="M3 12l9 4.5L21 12"></path>' +
-              '<path d="M3 16.5 12 21l9-4.5"></path>' +
-            '</svg>';
+        toggle.innerHTML = '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
         document.body.appendChild(toggle);
 
         var div = document.createElement('div');
         div.className = 'layer-panel';
         div.innerHTML =
-            '<div class="lp-header"><span>Capas y leyenda</span><button type="button" class="lp-close" aria-label="Cerrar capas">&times;</button></div>' +
+            '<div class="lp-header"><div><small>INVENTARIO DE CONTENEDORES</small><strong>Leyenda</strong></div>' +
+              '<button type="button" class="lp-close" aria-label="Cerrar leyenda"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>' +
+            '<p class="lp-help">Active las capas para visualizarlas en el mapa.</p>' +
             '<div class="lp-title">Contenedores</div>' +
             '<label class="lp-item"><input type="checkbox" data-cont="SOTERRADOS" checked>' +
               '<img src="' + ICON_SOT + '" alt=""><span>Soterrados (' + (contCounts.SOTERRADOS || 0) + ')</span></label>' +
@@ -171,21 +181,25 @@
             '<label class="lp-item"><input type="checkbox" data-via="Vía Local Secundaria" checked>' +
               '<span class="lp-line" style="border-top:3.5px solid #ffc80a"></span><span>Local Secundaria</span></label>' +
             '<label class="lp-item"><input type="checkbox" data-via="Metropolitana" checked>' +
-              '<span class="lp-line" style="border-top:3.5px dashed #000"></span><span>Metropolitana</span></label>';
+              '<span class="lp-line" style="border-top:3.5px dashed #000"></span><span>Metropolitana</span></label>' +
+            '<p class="lp-help">Imagen satelital: Esri.</p>';
         document.body.appendChild(div);
 
         function closePanel() {
             div.classList.remove('is-open');
             toggle.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('panel-open');
         }
         function togglePanel() {
             var open = !div.classList.contains('is-open');
             div.classList.toggle('is-open', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            document.body.classList.toggle('panel-open', open);
         }
 
         toggle.addEventListener('click', togglePanel);
         div.querySelector('.lp-close').addEventListener('click', closePanel);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanel(); });
 
         div.addEventListener('change', function (e) {
             var el = e.target;
@@ -208,14 +222,20 @@
     function initPopup() {
         popEl = document.createElement('div');
         popEl.className = 'cont-popup';
-        popEl.innerHTML = '<a class="cp-closer" href="#">&#215;</a><div class="cp-content"></div>';
+        popEl.innerHTML = '<button type="button" class="cp-closer" aria-label="Cerrar ficha del contenedor">&#215;</button><div class="cp-content"></div>';
         overlay = new ol.Overlay({
             element: popEl,
             positioning: 'bottom-center',
             offset: [0, -16],
-            autoPan: { animation: { duration: 250 } }
+            autoPan: { margin: 16, animation: { duration: 140 } }
         });
         map.addOverlay(overlay);
+        // La fotografía cambia la altura de la ficha al terminar de cargar.
+        function keepPopupVisible() {
+            overlay.panIntoView({ margin: 18, animation: { duration: 200 } });
+        }
+        popEl.addEventListener('load', keepPopupVisible, true);
+        popEl.addEventListener('error', keepPopupVisible, true);
         popEl.querySelector('.cp-closer').addEventListener('click', function (e) {
             e.preventDefault();
             overlay.setPosition(undefined);
@@ -229,7 +249,7 @@
         var rec   = tipo === 'RECICLAJE';
         var pro   = tipo === 'PROPUESTA RECICLAJE';
         var icon  = sot ? ICON_SOT : (rec ? ICON_REC : (pro ? ICON_PRO : ICON_SUP));
-        var color = sot ? '#666' : (rec ? '#14834a' : (pro ? '#178f49' : '#1f9c87'));
+        var color = sot ? '#475569' : (rec ? '#0875bd' : (pro ? '#178f49' : '#c83030'));
         var capacidad = f.get('CAPACIDAD');
         var link  = f.get('LINK');
         var id    = driveId(link);
@@ -239,7 +259,7 @@
         if (id) {
             foto =
                 '<a class="mc-photo" href="' + esc(link) + '" target="_blank" title="Abrir en Drive">' +
-                  '<img src="https://drive.google.com/thumbnail?id=' + id + '&sz=w1600" alt="" ' +
+                  '<img src="https://drive.google.com/thumbnail?id=' + id + '&sz=w900" alt="" loading="eager" fetchpriority="high" ' +
                   'referrerpolicy="no-referrer" ' +
                   'onerror="this.parentNode.className+=\' mc-noimg\'">' +
                 '</a>';
@@ -271,17 +291,26 @@
     function hookClick() {
         map.on('singleclick', function (evt) {
             var hit = null;
-            map.forEachFeatureAtPixel(evt.pixel, function (f, l) {
-                if (l === lyr_Inventario2026_0) { hit = f; return true; }
-            }, { hitTolerance: 8 });
+            map.forEachFeatureAtPixel(evt.pixel, function (f) {
+                hit = f;
+                return true;
+            }, {
+                layerFilter: function (layer) { return layer === lyr_Inventario2026_0; },
+                hitTolerance: 6
+            });
             if (hit) { showPopup(hit); }
             else { overlay.setPosition(undefined); }
         });
         map.on('pointermove', function (evt) {
+            if (evt.dragging) return;
             var over = false;
-            map.forEachFeatureAtPixel(evt.pixel, function (f, l) {
-                if (l === lyr_Inventario2026_0) { over = true; return true; }
-            }, { hitTolerance: 8 });
+            map.forEachFeatureAtPixel(evt.pixel, function () {
+                over = true;
+                return true;
+            }, {
+                layerFilter: function (layer) { return layer === lyr_Inventario2026_0; },
+                hitTolerance: 6
+            });
             map.getTargetElement().style.cursor = over ? 'pointer' : '';
         });
     }
@@ -326,15 +355,14 @@
         var div = document.createElement('div');
         div.className = 'road-search';
         div.innerHTML =
-            '<span class="rs-icon" aria-hidden="true">' +
-              '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>' +
-            '</span>' +
+            '<span class="rs-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>' +
             '<input type="text" id="rs-input" placeholder="Buscar v&iacute;a o contenedor&hellip;" autocomplete="off">' +
-            '<button id="rs-clear" title="Limpiar">&#215;</button>' +
+            '<button id="rs-clear" type="button" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" hidden><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
             '<div class="rs-list" id="rs-list"></div>';
         document.body.appendChild(div);
 
         var input = div.querySelector('#rs-input');
+        var clearButton = div.querySelector('#rs-clear');
         var list  = div.querySelector('#rs-list');
         var currentHits = [];
 
@@ -352,17 +380,18 @@
                     ol.extent.extend(ext, f.getGeometry().getExtent());
                     highlightSource.addFeature(new ol.Feature(f.getGeometry()));
                 });
-                map.getView().fit(ext, { padding: [120, 60, 60, 60], maxZoom: 18, duration: 450 });
+                map.getView().fit(ext, { padding: [120, 60, 60, 60], maxZoom: 18, duration: 280 });
             } else {
                 var f = entry.features[0];
                 var c = f.getGeometry().getCoordinates();
-                map.getView().animate({ center: c, zoom: 19, duration: 450 }, function (done) {
+                map.getView().animate({ center: c, zoom: 19, duration: 280 }, function (done) {
                     if (done) showPopup(f);
                 });
             }
         }
 
         input.addEventListener('input', function () {
+            clearButton.hidden = !this.value.length;
             var q = norm(this.value);
             if (q.length < 2) { hideList(); return; }
             currentHits = entries.filter(function (e) {
@@ -383,8 +412,9 @@
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && currentHits.length) select(currentHits[0]);
         });
-        div.querySelector('#rs-clear').addEventListener('click', function () {
+        clearButton.addEventListener('click', function () {
             input.value = '';
+            clearButton.hidden = true;
             hideList();
             highlightSource.clear();
         });
@@ -398,29 +428,36 @@
         var satLayer = new ol.layer.Tile({
             title: 'Satélite',
             visible: true,
-            opacity: 0.7,
+            opacity: 0.5,
             source: new ol.source.XYZ({
                 url: 'https://server.arcgisonline.com/ArcGIS/rest/services/' +
                      'World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 maxZoom: 19,
+                transition: 0,
                 attributions: 'Esri'
             })
         });
         try { map.getLayers().insertAt(1, satLayer); }
         catch (e) { map.addLayer(satLayer); }
 
+        var initialCenter = map.getView().getCenter().slice();
+        var initialZoom = map.getView().getZoom();
         var div = document.createElement('div');
-        div.className = 'ol-control sat-mini';
+        div.className = 'map-tools';
+        div.setAttribute('aria-label', 'Herramientas del mapa');
         div.innerHTML =
-            '<button id="sat-toggle" class="sat-ico on" title="Sat&eacute;lite" aria-label="Activar o desactivar sat&eacute;lite">&#9680;</button>' +
-            '<span class="sat-label">Opacidad</span>' +
-            '<input type="range" id="sat-slider" min="0" max="100" value="70" aria-label="Opacidad del sat&eacute;lite">' +
-            '<span class="sat-value">70%</span>';
-        map.addControl(new ol.control.Control({ element: div }));
+            '<div class="tool-buttons">' +
+              '<button type="button" id="map-home" class="map-tool" title="Volver a la vista inicial"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span></button>' +
+              '<button type="button" id="opacity-toggle" class="map-tool" title="Controlar transparencia" aria-expanded="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i><span>Transparencia</span></button>' +
+            '</div>' +
+            '<div class="opacity-panel" hidden><label for="sat-slider">Transparencia del mapa</label>' +
+              '<div class="opacity-row"><input type="range" id="sat-slider" min="0" max="100" value="50" aria-label="Opacidad del satélite"><output class="sat-value" for="sat-slider">50%</output></div></div>';
+        document.body.appendChild(div);
 
         var slider = div.querySelector('#sat-slider');
-        var toggle = div.querySelector('#sat-toggle');
         var value = div.querySelector('.sat-value');
+        var opacityToggle = div.querySelector('#opacity-toggle');
+        var opacityPanel = div.querySelector('.opacity-panel');
         function syncSlider() {
             var pct = Number(slider.value);
             satLayer.setOpacity(pct / 100);
@@ -429,13 +466,33 @@
         }
         syncSlider();
         slider.addEventListener('input', syncSlider);
-        toggle.addEventListener('click', function () {
-            var v = !satLayer.getVisible();
-            satLayer.setVisible(v);
-            this.className = v ? 'sat-ico on' : 'sat-ico';
-            slider.disabled = !v;
-            value.style.opacity = v ? '1' : '.45';
+        div.querySelector('#map-home').addEventListener('click', function () {
+            overlay.setPosition(undefined);
+            map.getView().animate({ center: initialCenter, zoom: initialZoom, duration: 450 });
         });
+        opacityToggle.addEventListener('click', function () {
+            var open = opacityPanel.hidden;
+            opacityPanel.hidden = !open;
+            opacityToggle.classList.toggle('is-active', open);
+            opacityToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    }
+
+    function addMapChrome() {
+        map.getControls().getArray().slice().forEach(function (control) {
+            if (control instanceof ol.control.Attribution) map.removeControl(control);
+        });
+        var compass = document.createElement('button');
+        compass.type = 'button';
+        compass.className = 'map-compass';
+        compass.title = 'Orientar el mapa al norte';
+        compass.setAttribute('aria-label', 'Orientar el mapa al norte');
+        compass.innerHTML = '<i class="fa-solid fa-location-arrow" aria-hidden="true"></i>';
+        compass.addEventListener('click', function () {
+            map.getView().animate({ rotation: 0, duration: 300 });
+        });
+        document.body.appendChild(compass);
+        map.addControl(new ol.control.ScaleLine({ units: 'metric' }));
     }
 
     /* ================= INIT ================= */
@@ -454,6 +511,7 @@
         hookClick();
         addSearch();
         initSatellite();
+        addMapChrome();
     }
 
     function init() {

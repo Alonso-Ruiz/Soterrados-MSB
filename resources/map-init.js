@@ -2,11 +2,13 @@
 var map = new ol.Map({
     target: 'map',
     renderer: 'canvas',
+    // Evita renderizar a 2x/3x en teléfonos con pantalla de alta densidad.
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
     layers: layersList,
     view: new ol.View({
         minZoom: 1,
         maxZoom: 28,
-        constrainResolution: true
+        constrainResolution: false
     })
 });
 
